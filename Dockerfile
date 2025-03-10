@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
     git \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pipenv globally
@@ -18,17 +19,18 @@ WORKDIR /app
 COPY . /app
 
 # Install the Python dependencies using pipenv
-# --deploy ensures that the Pipfile.lock is used (fail if out-of-date)
 RUN pipenv install --deploy --ignore-pipfile
 
-# (Optional) Copy example.env to .env if no external .env is provided.
-# You might want to override .env later via volumes or environment variables.
-RUN cp example.env .env
+# Create .env from example.env and replace the ChangeMe placeholders with generated values.
+# A 16-byte hex string is used for ADMIN_PASS and a 32-byte hex string for SECRET_KEY.
+RUN cp example.env .env && \
+    ADMIN_PASS=$(openssl rand -hex 16) && \
+    SECRET_KEY=$(openssl rand -hex 32) && \
+    sed -i "s/ADMIN_PASS=ChangeMe/ADMIN_PASS=${ADMIN_PASS}/" .env && \
+    sed -i "s/SECRET_KEY=ChangeMe/SECRET_KEY=${SECRET_KEY}/" .env
 
 # Expose the port if your app runs a web server (adjust as needed)
 EXPOSE 8000
 
-# Set the default command.
-# For development, this runs the development server with automatic restarts.
-# Change "dev" to "parse" or another command as needed.
-CMD ["pipenv", "run", "./run.sh", "prod"]
+# Set the default command. Adjust the command (e.g., "dev", "parse") as needed.
+CMD ["pipenv", "run", "./run.sh", "dev"]
