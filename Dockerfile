@@ -31,4 +31,4 @@ EXPOSE 8000
 # Set the default command.
 # For development, this runs the development server with automatic restarts.
 # Change "dev" to "parse" or another command as needed.
-CMD ["pipenv", "run", "./run.sh", "dev"]
+CMD ["pipenv", "run", "./run.sh", "prod"]
